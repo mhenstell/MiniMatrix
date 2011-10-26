@@ -1,52 +1,96 @@
-//Pin connected to ST_CP of 74HC595
-int latchPin = 8;
-//Pin connected to SH_CP of 74HC595
-int clockPin = 12;
-////Pin connected to DS of 74HC595
-int dataPin = 11;
+#include <FrequencyTimer2.h>
 
-int latchPin2 = 13;
-int clockPin2 = 9;
-int dataPin2 = 10;
-int g = 7;
-int clr = 6;
+int latch74 = 8; //ST_CP of 74HC595
+int clock74 = 12; //SH_CP of 74HC595
+int data74 = 11; //DS of 74HC595
 
+int latch6 = 13; //RCK of TPIC6B595
+int clock6 = 9; //SRCK of TPIC6B595
+int data6 = 10; //SER IN of TPIC6B595
+int enable6 = 7; //G of TPIC6B595
+int clear6 = 6; //SRCLR of TPIC6B595
+
+#define height 8
+#define width 8
+
+uint8_t buffer[height];
+
+int yPos = 0;
+int xPos = 0;
 
 void setup() {
   //set pins to output so you can control the shift register
-  pinMode(latchPin, OUTPUT);
-  pinMode(clockPin, OUTPUT);
-  pinMode(dataPin, OUTPUT);
-  pinMode(latchPin2, OUTPUT);
-  pinMode(clockPin2, OUTPUT);
-  pinMode(dataPin2, OUTPUT);
-  pinMode(g, OUTPUT);
-  pinMode(clr, OUTPUT);
+  pinMode(latch74, OUTPUT);
+  pinMode(clock74, OUTPUT);
+  pinMode(data74, OUTPUT);
+  pinMode(latch6, OUTPUT);
+  pinMode(clock6, OUTPUT);
+  pinMode(data6, OUTPUT);
+  pinMode(enable6, OUTPUT);
+  pinMode(clear6, OUTPUT);
+  
+  pinMode(13, OUTPUT);
+  
+  Serial.begin(9600);
+  Serial.println("Begin.");
+  
+//  for (int y=0; y < height; y++) {
+//    buffer[y] = 0; 
+//  }
+  
+
 }
 
 void loop() {
-  // count from 0 to 255 and display the number 
-  // on the LEDs
-  for (int numberToDisplay = 0; numberToDisplay < 256; numberToDisplay++) {
-    digitalWrite(latchPin2, LOW);
-    digitalWrite(g, HIGH);
-    digitalWrite(clr, LOW);
-    digitalWrite(clr, HIGH);
-    shiftOut(dataPin2, clockPin2, MSBFIRST, 2);
+
+  for (int y = 0; y < height; y++) {
+    PORTB ^= _BV(5);
     
-    digitalWrite(g, LOW);
-    digitalWrite(latchPin2, HIGH);
-    
-    // take the latchPin low so 
-    // the LEDs don't change while you're sending in bits:
-    digitalWrite(latchPin, LOW);
-    // shift out the bits:
-    shiftOut(dataPin, clockPin, MSBFIRST, numberToDisplay);
-    //take the latch pin high so the LEDs will light up:
-    digitalWrite(latchPin, HIGH);
-    // pause before next value:
-    delay(500);
+    for (int numberToDisplay = 0; numberToDisplay < 256; numberToDisplay++) {
+      buffer[y] = numberToDisplay;
+
+      dump();
+      delay(1000);
+    }
   }
   
   
+}
+
+void display() {
+   
+  digitalWrite(enable6, HIGH); //Turn off column
+  
+  yPos++;
+  if (yPos == width) yPos = 0;
+   
+  //Shift out the rows
+  digitalWrite(latch74, LOW);
+  shiftOut(data74, clock74, MSBFIRST, buffer[yPos]);
+  digitalWrite(latch74, HIGH); 
+  
+  digitalWrite(enable6, LOW); //Turn on column
+
+}
+
+void dump() {
+ 
+ for (int y=0; y < height; y++) {
+   Serial.println(buffer[y], HEX);
+ }
+ 
+ Serial.println(" - - - ");
+  
+}
+
+void selectColumn(int col) {
+  digitalWrite(latch6, LOW);
+   
+  digitalWrite(clear6, LOW);
+  digitalWrite(clear6, HIGH);
+   
+  shiftOut(data6, clock6, MSBFIRST, 1 << col);
+   
+   
+  digitalWrite(latch6, HIGH);
 }
