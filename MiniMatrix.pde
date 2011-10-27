@@ -65,7 +65,7 @@ ISR(TIMER1_OVF_vect) {
   /* Reload the timer */  
   TCNT1 = 0x0BDC;  
   /* Write to a digital pin so that we can confirm our timer */  
-  dump();
+  display();
 }  
 
 void display() {
@@ -74,15 +74,18 @@ void display() {
   
   yPos++;
   if (yPos == width) yPos = 0;
-   
+  
+  selectColumn(yPos);
+  
   //Shift out the rows
   digitalWrite(latch74, LOW);
-  shiftOut(data74, clock74, MSBFIRST, buffer[0][yPos]);
-  shiftOut(data74, clock74, MSBFIRST, buffer[1][yPos]);
+  shiftOut(data74, clock74, MSBFIRST, buffer[RED][yPos]);
+  shiftOut(data74, clock74, MSBFIRST, buffer[GREEN][yPos]);
   digitalWrite(latch74, HIGH); 
   
   digitalWrite(enable6, LOW); //Turn on column
-
+  
+  dump();
 }
 
 void dump() {
