@@ -12,8 +12,10 @@ int clear6 = 6; //SRCLR of TPIC6B595
 
 #define height 8
 #define width 8
+#define RED 0
+#define GREEN 1
 
-uint8_t buffer[height];
+uint8_t buffer[2][height];
 
 int yPos = 0;
 int xPos = 0;
@@ -47,18 +49,16 @@ void setup() {
 
 void loop() {
 
-  for (int y = 0; y < height; y++) {
-    PORTB ^= _BV(5);
-    
-    for (int numberToDisplay = 0; numberToDisplay < 256; numberToDisplay++) {
-      buffer[y] = numberToDisplay;
-
-
-      delay(20);
+  for (int color = 0; color < 2; color++) {
+    for (int y = 0; y < height; y++) {
+      PORTB ^= _BV(5);
+      
+      for (int numberToDisplay = 0; numberToDisplay < 256; numberToDisplay++) {
+        buffer[color][y] = numberToDisplay;
+        delay(5);
+      }
     }
   }
-  
-  
 }
 
 ISR(TIMER1_OVF_vect) {  
@@ -77,7 +77,8 @@ void display() {
    
   //Shift out the rows
   digitalWrite(latch74, LOW);
-  shiftOut(data74, clock74, MSBFIRST, buffer[yPos]);
+  shiftOut(data74, clock74, MSBFIRST, buffer[0][yPos]);
+  shiftOut(data74, clock74, MSBFIRST, buffer[1][yPos]);
   digitalWrite(latch74, HIGH); 
   
   digitalWrite(enable6, LOW); //Turn on column
@@ -87,8 +88,12 @@ void display() {
 void dump() {
  
  for (int y=0; y < height; y++) {
-   for (int bit=0; bit < 7; bit++) {
-     Serial.print((buffer[y] & (1<<bit)) > 0);
+   for (int color = 0; color < 2; color++) {
+     for (int bit=0; bit < 7; bit++) {
+       Serial.print((buffer[color][y] & (1<<bit)) > 0);
+     }
+   
+   Serial.print("  ");
    }
    Serial.println("");
  }
