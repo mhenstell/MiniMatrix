@@ -1,5 +1,3 @@
-#include <FrequencyTimer2.h>
-
 int latch74 = 8; //ST_CP of 74HC595 14
 int clock74 = 12; //SH_CP of 74HC595 18
 int data74 = 11; //DS of 74HC595 17
@@ -94,8 +92,6 @@ unsigned int tcnt2;
 void setup() {
   //set pins to output so you can control the shift register
   pinMode(latch74, OUTPUT);
-  //pinMode(clock74, OUTPUT);
-  //pinMode(data74, OUTPUT);
   pinMode(latch6, OUTPUT);
   pinMode(clock6, OUTPUT);
   pinMode(data6, OUTPUT);
@@ -104,12 +100,6 @@ void setup() {
   
   Serial.begin(9600);
   Serial.println("Begin.\n");
-  
-//  TIMSK1=0x01; // enabled global and timer overflow interrupt;
-//  TCCR1A = 0x00; // normal operation page 148 (mode0);
-//  TCNT1=0x0000; // 16bit counter register
-//  TCCR1B = 0x04; // start timer/ set clock
-
 
  /* First disable the timer overflow interrupt while we're configuring */  
   TIMSK2 &= ~(1<<TOIE2);  
@@ -147,9 +137,7 @@ void setup() {
 
 void loop() {
   
-
   playAnimation();
-
 
 }
 
@@ -162,18 +150,10 @@ void playAnimation() {
        buffer[RED][row] = redFrames[frame][row];
        buffer[GREEN][row] = greenFrames[frame][row];
      }
-     
-     
+
     delay(frameDurations[frame]);
   }
-
-  
-  
 }
-
-
-
-
 
 void counter() {
   for (int color = 0; color < 2; color++) {
@@ -184,27 +164,6 @@ void counter() {
       }
     }
   }
-}
-
-void staticImage() {
-//  buffer[0][0] = B10101010;
-//  buffer[0][1] = B01010101;
-//  buffer[0][2] = B10101010;
-//  buffer[0][3] = B01010101;
-//  buffer[0][4] = B10101010;
-//  buffer[0][5] = B01010101;
-//  buffer[0][6] = B10101010;
-//  buffer[0][7] = B01010101;
-//  
-//
-//  buffer[1][0] = B01010101;
-//  buffer[1][1] = B10101010;
-//  buffer[1][2] = B01010101;
-//  buffer[1][3] = B10101010;
-//  buffer[1][4] = B01010101;
-//  buffer[1][5] = B10101010;
-//  buffer[1][6] = B01010101;
-//  buffer[1][7] = B10101010;
 }
 
 ISR(TIMER2_OVF_vect) {  
@@ -227,14 +186,9 @@ void display() {
   digitalWrite(latch74, LOW);
   shiftOut(data74, clock74, buffer[RED][yPos]);
   shiftOut(data74, clock74, buffer[GREEN][yPos]);
-  //shiftOut(data74, clock74, redBuffer[yPos]);
-  //shiftOut(data74, clock74, greenBuffer[yPos]);
   digitalWrite(latch74, HIGH); 
   
   digitalWrite(enable6, LOW); //Turn on row
-  
-  //dump();
-
 }
 
 void selectRow(int row) {
@@ -243,12 +197,9 @@ void selectRow(int row) {
   digitalWrite(clear6, HIGH);
    
   shiftOut(data6, clock6, MSBFIRST, 1 << row);
-  //shiftOut(data6, clock6, MSBFIRST, 0x01);
 
   digitalWrite(latch6, HIGH);
 }
-
-
 
 void shiftOut(int myDataPin, int myClockPin, byte myDataOut) {
   // This shifts 8 bits out MSB first, 
@@ -294,26 +245,4 @@ void shiftOut(int myDataPin, int myClockPin, byte myDataOut) {
 
   //stop shifting
   digitalWrite(myClockPin, 0);
-}
-
-
-
-
-
-
-void dump() {
- 
- for (int y=0; y < height; y++) {
-   for (int color = 0; color < 2; color++) {
-     for (int bit=0; bit < 7; bit++) {
-       //Serial.print((buffer[color][y] & (1<<bit)) > 0);
-     }
-   
-   Serial.print("  ");
-   }
-   Serial.println("");
- }
- 
- Serial.println(" - - - ");
-  
 }
