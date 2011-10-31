@@ -1,3 +1,4 @@
+#include <avr/pgmspace.h> 
 int latch74 = 8; //ST_CP of 74HC595 14
 int clock74 = 12; //SH_CP of 74HC595 18
 int data74 = 11; //DS of 74HC595 17
@@ -18,8 +19,9 @@ uint8_t buffer[2][height];
 int yPos = 0;
 int xPos = 0;
 
-unsigned int frameCount=29;
-uint8_t redFrames[29][8]={
+unsigned int frameCount = 29;
+
+uint8_t redFrames[29][8] = {
 {1,0,0,0,0,0,0,0,},
 {1,2,0,0,0,0,0,0,},
 {1,2,4,0,0,0,0,0,},
@@ -51,7 +53,7 @@ uint8_t redFrames[29][8]={
 {0,0,0,0,0,0,0,0,},
 };
 
-uint8_t greenFrames[29][8]={
+uint8_t greenFrames[29][8] PROGMEM = {
 {0,0,0,0,0,0,0,0,},
 {0,0,0,0,0,0,0,0,},
 {0,0,0,0,0,0,0,0,},
@@ -145,24 +147,11 @@ void playAnimation() {
   
   for (int frame = 0; frame < frameCount; frame++) {
      for (int row = 0; row < height; row++) {
-       //redBuffer[row] = redFrames[frame][row];
-       //greenBuffer[row] = greenFrames[frame][row];
-       buffer[RED][row] = redFrames[frame][row];
-       buffer[GREEN][row] = greenFrames[frame][row];
+       buffer[RED][row] = pgm_read_byte(&redFrames[frame][row]);
+       buffer[GREEN][row] = pgm_read_byte(&greenFrames[frame][row]);
      }
 
     delay(frameDurations[frame]);
-  }
-}
-
-void counter() {
-  for (int color = 0; color < 2; color++) {
-    for (int y = 0; y < width; y++) {
-      for (int numberToDisplay = 0; numberToDisplay < 256; numberToDisplay++) {
-        //buffer[color][y] = numberToDisplay;
-        delay(10);
-      }
-    }
   }
 }
 
@@ -189,6 +178,7 @@ void display() {
   digitalWrite(latch74, HIGH); 
   
   digitalWrite(enable6, LOW); //Turn on row
+
 }
 
 void selectRow(int row) {
